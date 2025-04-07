@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { BibleAPI, BibleVerse } from '../../services/bibleApi';
 import { Link } from 'react-router-dom';
 import { Sparkles, Copy, Check } from 'lucide-react';
@@ -42,14 +42,12 @@ const VerseOfTheDay = () => {
     const bookParts = parts[0].split('.');
     let bookName = '';
     
-    // Handle books with numbers (e.g., "1 Corinthians")
     if (bookParts.length > 1) {
       bookName = `${bookParts[0]} ${bookParts[1]}`;
     } else {
       bookName = bookParts[0];
     }
     
-    // Get the full book name from the ID
     const fullBookName = BibleAPI.getBookNameFromId(verse.bookId);
     
     if (!fullBookName) return '#';

@@ -1,4 +1,3 @@
-import React from 'react';
 import VerseOfTheDay from '../components/bible/VerseOfTheDay';
 import QuickAccessVerses from '../components/bible/QuickAccessVerses';
 import BibleBooksList from '../components/bible/BibleBooksList';

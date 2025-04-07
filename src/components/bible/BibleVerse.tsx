@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { BibleAPI } from '../../services/bibleApi';
 import { Copy, Check, Share2 } from 'lucide-react';
 
@@ -64,7 +64,6 @@ const BibleVerse = ({ bookId, chapterNumber, verseNumber, fullDisplay = false }:
     return <div className="text-red-600 text-center py-4">{error || 'Verse not found'}</div>;
   }
 
-  // For compact display (used in search results or quick access)
   if (!fullDisplay) {
     return (
       <div className="bg-[#FFF5E6] p-3 rounded-lg mb-2">
@@ -76,7 +75,6 @@ const BibleVerse = ({ bookId, chapterNumber, verseNumber, fullDisplay = false }:
     );
   }
 
-  // For full display (dedicated verse view)
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <h2 className="text-2xl font-serif mb-6 text-center text-[#8B0000]">

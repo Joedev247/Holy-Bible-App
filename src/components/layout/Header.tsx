@@ -8,29 +8,24 @@ const Header = () => {
   const [selectedBook, setSelectedBook] = useState('GEN');
   const [selectedChapter, setSelectedChapter] = useState('1');
   const [selectedVerse, setSelectedVerse] = useState('1');
-  const [chapterCount, setChapterCount] = useState(50); // Default chapters
-  const [verseCount, setVerseCount] = useState(31); // Default verses for Genesis 1
+  const [chapterCount, setChapterCount] = useState(50);
+  const [verseCount, setVerseCount] = useState(31); 
   const [bookNameDisplay, setBookNameDisplay] = useState('Genesis');
   const navigate = useNavigate();
 
-  // Combine book lists for display but keep track of their testament
   const allBooks = [
     ...BIBLE_BOOKS.OLD_TESTAMENT.map(book => ({...book, testament: 'old'})),
     ...BIBLE_BOOKS.NEW_TESTAMENT.map(book => ({...book, testament: 'new'}))
   ];
 
-  // Update chapter count when book changes
   useEffect(() => {
     const fetchChapterCount = async () => {
       try {
         const count = await BibleAPI.getChapterCount(selectedBook);
         setChapterCount(count || 1);
-        // Reset to chapter 1 when book changes
         setSelectedChapter('1');
-        // Also reset verse
         setSelectedVerse('1');
         
-        // Update book name display
         const foundBook = allBooks.find(book => book.id === selectedBook);
         if (foundBook) {
           setBookNameDisplay(foundBook.name);
@@ -44,7 +39,6 @@ const Header = () => {
     fetchChapterCount();
   }, [selectedBook]);
 
-  // Update verse count when chapter changes
   useEffect(() => {
     const fetchVerseCount = async () => {
       try {
@@ -52,7 +46,6 @@ const Header = () => {
           const chapterId = `${selectedBook}.${selectedChapter}`;
           const count = await BibleAPI.getVerseCount(chapterId);
           setVerseCount(count || 1);
-          // Reset to verse 1 when chapter changes
           setSelectedVerse('1');
         }
       } catch (error) {
@@ -64,7 +57,6 @@ const Header = () => {
     fetchVerseCount();
   }, [selectedBook, selectedChapter]);
 
-  // Handle search submission
   const handleSearch = (e: { preventDefault: () => void; }) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -72,7 +64,6 @@ const Header = () => {
     }
   };
 
-  // Handle navigation to selected verse
   const handleGoToVerse = () => {
     const bookName = bookNameDisplay.toLowerCase().replace(/\s+/g, '-');
     
@@ -100,7 +91,6 @@ const Header = () => {
           </div>
         </div>
 
-        {/* Search Bar */}
         <form onSubmit={handleSearch} className="mt-6 flex space-x-2">
           <div className="flex-1 flex space-x-2">
             <div className="relative flex-1">
@@ -130,7 +120,6 @@ const Header = () => {
           </div>
         </form>
 
-        {/* Bible Navigation */}
         <div className="mt-4 flex flex-wrap gap-2">
           <select
             value={selectedBook}

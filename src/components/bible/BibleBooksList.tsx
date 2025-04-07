@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import  { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BibleAPI, BIBLE_BOOKS } from '../../services/bibleApi';
 import { Book } from 'lucide-react';

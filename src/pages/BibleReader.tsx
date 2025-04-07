@@ -1,4 +1,3 @@
-import React from 'react';
 import BibleBooksList from '../components/bible/BibleBooksList';
 import { Search } from 'lucide-react';
 import { Link } from 'react-router-dom';

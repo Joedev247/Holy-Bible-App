@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BibleAPI } from '../../services/bibleApi';
 import { ChevronRight } from 'lucide-react';
@@ -38,7 +37,6 @@ const SearchResults = ({
   const highlightMatches = (text: string, query: string) => {
     if (!query.trim()) return text;
     
-    // Simple highlighting logic (can be improved with regex)
     const lowerText = text.toLowerCase();
     const lowerQuery = query.toLowerCase();
     const parts = [];
@@ -46,10 +44,8 @@ const SearchResults = ({
     
     let index = lowerText.indexOf(lowerQuery, lastIndex);
     while (index !== -1) {
-      // Add text before match
       parts.push(text.substring(lastIndex, index));
       
-      // Add highlighted match
       parts.push(
         <span key={index} className="bg-yellow-200">
           {text.substring(index, index + query.length)}
@@ -60,7 +56,6 @@ const SearchResults = ({
       index = lowerText.indexOf(lowerQuery, lastIndex);
     }
     
-    // Add remaining text
     parts.push(text.substring(lastIndex));
     
     return <>{parts}</>;

@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BibleAPI } from '../../services/bibleApi';
 import { Star } from 'lucide-react';
@@ -6,7 +5,6 @@ import { Star } from 'lucide-react';
 const QuickAccessVerses = () => {
   const navigate = useNavigate();
 
-  // Popular verses for quick access
   const popularVerses = [
     { id: 'JHN.3.16', reference: 'John 3:16' },
     { id: 'PSA.23.1', reference: 'Psalm 23:1' },
