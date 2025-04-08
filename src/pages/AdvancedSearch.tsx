@@ -41,10 +41,7 @@ const AdvancedSearch = () => {
         return;
       }
       
-      const results = await BibleAPI.searchBible(searchTerm, {
-        books: selectedBooks.length > 0 ? selectedBooks : undefined,
-        testament: testament !== 'all' ? testament : undefined
-      });
+      const results = await BibleAPI.searchBible(searchTerm);
       
       setSearchResults(results);
       setLoading(false);
@@ -178,7 +175,9 @@ const AdvancedSearch = () => {
               Found {searchResults.length} results for "{searchTerm}"
             </p>
           </div>
-          <SearchResults results={searchResults} />
+          <SearchResults results={searchResults} query={''} isLoading={false} totalResults={0} currentPage={0} onPageChange={function (_newPage: number): void {
+                throw new Error('Function not implemented.');
+              } } />
         </div>
       ) : searchTerm ? (
         <div className="bg-white rounded-lg shadow-md p-6 text-center">

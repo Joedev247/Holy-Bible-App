@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { BibleAPI } from '../services/bibleApi';
 import { Book, ChevronLeft } from 'lucide-react';
 
 const BookView = () => {
   const { bookName } = useParams<{ bookName: string }>();
-  const [bookId, setBookId] = useState<string>('');
   const [bookData, setBookData] = useState<any>(null);
   const [chapterCount, setChapterCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
@@ -36,8 +35,6 @@ const BookView = () => {
           setLoading(false);
           return;
         }
-
-        setBookId(id);
         
         // Get book data
         const data = await BibleAPI.getBookInfo(id);

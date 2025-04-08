@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { BibleAPI, BibleVerse } from '../services/bibleApi';
 import SearchBar from '../components/search/SearchBar';
 import SearchResults from '../components/search/SearchResults';
@@ -65,9 +65,17 @@ const SearchPage = () => {
       ) : error ? (
         <div className="text-red-600 text-center py-12">{error}</div>
       ) : searchResults.length > 0 ? (
-        <SearchResults results={searchResults} query={''} isLoading={false} totalResults={0} currentPage={0} onPageChange={function (newPage: number): void {
-                          throw new Error('Function not implemented.');
-                      } } />
+        <SearchResults 
+          results={searchResults} 
+          query={searchTerm} 
+          isLoading={false} 
+          totalResults={searchResults.length} 
+          currentPage={0} 
+          onPageChange={(newPage) => {
+            // Handle page change logic here
+            console.log(`Changing to page ${newPage}`);
+          }} 
+        />
       ) : searchTerm ? (
         <div className="bg-white rounded-lg shadow-md p-6 text-center">
           <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />

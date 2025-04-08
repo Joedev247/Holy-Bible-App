@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
 
+
 interface SearchBarProps {
+  onSearch: (query: string) => Promise<void>;
   defaultQuery?: string;
   standalone?: boolean;
 }
