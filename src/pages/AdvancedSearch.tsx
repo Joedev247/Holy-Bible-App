@@ -52,7 +52,6 @@ const AdvancedSearch = () => {
     }
   };
 
-  // Get the list of books based on selected testament
   const getBooksList = () => {
     if (testament === 'old') {
       return BIBLE_BOOKS.OLD_TESTAMENT;

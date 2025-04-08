@@ -2,22 +2,21 @@ import { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { BibleAPI, BIBLE_BOOKS, VERSE_COUNTS } from '../../services/bibleApi';
+import { useBibleNavigation } from '../../contexts/BibleNavigationContext';
 
 const Header = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedBook, setSelectedBook] = useState('GEN');
-  const [selectedChapter, setSelectedChapter] = useState('1');
-  const [selectedVerse, setSelectedVerse] = useState('1');
   const [chapterCount, setChapterCount] = useState(50);
   const [verseCount, setVerseCount] = useState(31); 
-  const [bookNameDisplay, setBookNameDisplay] = useState('Genesis');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-
-  const allBooks = [
-    ...BIBLE_BOOKS.OLD_TESTAMENT.map(book => ({...book, testament: 'old'})),
-    ...BIBLE_BOOKS.NEW_TESTAMENT.map(book => ({...book, testament: 'new'}))
-  ];
+  
+  const { 
+    selectedBook, 
+    selectedChapter, 
+    selectedVerse, 
+    setSelection 
+  } = useBibleNavigation();
 
   useEffect(() => {
     const fetchChapterCount = async () => {
@@ -25,17 +24,9 @@ const Header = () => {
       try {
         const count = await BibleAPI.getChapterCount(selectedBook);
         setChapterCount(count || 1);
-        // Reset selections when book changes
-        setSelectedChapter('1');
-        setSelectedVerse('1');
         
-        const foundBook = allBooks.find(book => book.id === selectedBook);
-        if (foundBook) {
-          setBookNameDisplay(foundBook.name);
-        }
       } catch (error) {
         console.error('Error fetching chapter count:', error);
-        // Fallback to predefined chapter counts or defaults
         const fallbackCounts: Record<string, number> = {
           'GEN': 50, 'PSA': 150, 'MAT': 28, 'JHN': 21, 'ROM': 16
         };
@@ -55,28 +46,24 @@ const Header = () => {
         if (selectedBook && selectedChapter) {
           const chapterId = `${selectedBook}.${selectedChapter}`;
           
-          // First check if we have this verse count predefined
           if (VERSE_COUNTS[chapterId]) {
             setVerseCount(VERSE_COUNTS[chapterId]);
           } else {
-            // Try to get from API, with robust error handling
             try {
               const count = await BibleAPI.getVerseCount(chapterId);
               setVerseCount(count || 1);
             } catch (apiError) {
               console.error('API error fetching verse count:', apiError);
-              // Set reasonable defaults based on book type
               if (selectedBook === 'PSA') setVerseCount(20);
               else if (['PRO', 'ISA', 'JER'].includes(selectedBook)) setVerseCount(25);
-              else setVerseCount(30); // Default for most books
+              else setVerseCount(30); 
             }
           }
           
-          setSelectedVerse('1'); // Reset verse selection
         }
       } catch (error) {
         console.error('Error in verse count logic:', error);
-        setVerseCount(30); // Safe default
+        setVerseCount(30); 
       } finally {
         setIsLoading(false);
       }
@@ -93,13 +80,22 @@ const Header = () => {
   };
 
   const handleGoToVerse = () => {
-    const bookName = bookNameDisplay.toLowerCase().replace(/\s+/g, '-');
-    
-    if (selectedVerse !== '1') {
-      navigate(`/bible/${bookName}/${selectedChapter}/${selectedVerse}`);
-    } else {
-      navigate(`/bible/${bookName}/${selectedChapter}`);
-    }
+    setSelection(selectedBook, selectedChapter, selectedVerse);
+  };
+
+  const handleBookChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newBook = e.target.value;
+    setSelection(newBook, '1', '1'); 
+  };
+
+  const handleChapterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newChapter = e.target.value;
+    setSelection(selectedBook, newChapter, '1'); 
+  };
+
+  const handleVerseChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newVerse = e.target.value;
+    setSelection(selectedBook, selectedChapter, newVerse);
   };
 
   return (
@@ -151,7 +147,7 @@ const Header = () => {
         <div className="mt-4 flex flex-wrap gap-2">
           <select
             value={selectedBook}
-            onChange={(e) => setSelectedBook(e.target.value)}
+            onChange={handleBookChange}
             className="px-4 py-2 rounded bg-[#FFF5E6] text-gray-800"
             aria-label="Select book"
             disabled={isLoading}
@@ -174,7 +170,7 @@ const Header = () => {
           
           <select
             value={selectedChapter}
-            onChange={(e) => setSelectedChapter(e.target.value)}
+            onChange={handleChapterChange}
             className="px-4 py-2 rounded bg-[#FFF5E6] text-gray-800 w-20"
             aria-label="Select chapter"
             disabled={isLoading}
@@ -188,7 +184,7 @@ const Header = () => {
           
           <select
             value={selectedVerse}
-            onChange={(e) => setSelectedVerse(e.target.value)}
+            onChange={handleVerseChange}
             className="px-4 py-2 rounded bg-[#FFF5E6] text-gray-800 w-20"
             aria-label="Select verse"
             disabled={isLoading}

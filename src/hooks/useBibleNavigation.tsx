@@ -39,10 +39,8 @@ export const useBibleNavigation = (): UseBibleNavigationReturn => {
   };
 
   const getNextChapterInfo = async (currentBookId: string, currentChapter: number) => {
-    // Get the chapter count for the current book
     const chapterCount = await BibleAPI.getChapterCount(currentBookId);
     
-    // If there are more chapters in this book
     if (currentChapter < chapterCount) {
       return {
         bookId: currentBookId,
@@ -51,26 +49,22 @@ export const useBibleNavigation = (): UseBibleNavigationReturn => {
       };
     }
     
-    // If we're at the last chapter of the book, find the next book
     const allBooks = [...BIBLE_BOOKS.OLD_TESTAMENT, ...BIBLE_BOOKS.NEW_TESTAMENT];
     const currentBookIndex = allBooks.findIndex(book => book.id === currentBookId);
     
-    // If we found the current book and it's not the last book
     if (currentBookIndex >= 0 && currentBookIndex < allBooks.length - 1) {
       const nextBook = allBooks[currentBookIndex + 1];
       return {
         bookId: nextBook.id,
-        chapter: 1, // Start at chapter 1 of the next book
+        chapter: 1, 
         bookName: nextBook.name
       };
     }
     
-    // If we're at the last chapter of the last book
     return null;
   };
 
   const getPreviousChapterInfo = async (currentBookId: string, currentChapter: number) => {
-    // If we're not at the first chapter of the book
     if (currentChapter > 1) {
       return {
         bookId: currentBookId,
@@ -79,25 +73,21 @@ export const useBibleNavigation = (): UseBibleNavigationReturn => {
       };
     }
     
-    // If we're at the first chapter of the book, find the previous book
     const allBooks = [...BIBLE_BOOKS.OLD_TESTAMENT, ...BIBLE_BOOKS.NEW_TESTAMENT];
     const currentBookIndex = allBooks.findIndex(book => book.id === currentBookId);
     
-    // If we found the current book and it's not the first book
     if (currentBookIndex > 0) {
       const prevBook = allBooks[currentBookIndex - 1];
       
-      // Get the chapter count for the previous book
       const chapterCount = await BibleAPI.getChapterCount(prevBook.id);
       
       return {
         bookId: prevBook.id,
-        chapter: chapterCount, // Go to last chapter of previous book
+        chapter: chapterCount, 
         bookName: prevBook.name
       };
     }
     
-    // If we're at the first chapter of the first book
     return null;
   };
 

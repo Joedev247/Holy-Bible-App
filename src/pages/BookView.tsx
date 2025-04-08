@@ -21,13 +21,11 @@ const BookView = () => {
           return;
         }
 
-        // Convert URL-friendly book name to proper format
         const formattedBookName = bookName
           .split('-')
           .map(word => word.charAt(0).toUpperCase() + word.slice(1))
           .join(' ');
 
-        // Get book ID from name
         const id = BibleAPI.getBookIdFromName(formattedBookName);
         
         if (!id) {
@@ -36,11 +34,9 @@ const BookView = () => {
           return;
         }
         
-        // Get book data
         const data = await BibleAPI.getBookInfo(id);
         setBookData(data);
         
-        // Get chapter count
         const count = await BibleAPI.getChapterCount(id);
         setChapterCount(count);
         

@@ -72,7 +72,6 @@ const SearchPage = () => {
           totalResults={searchResults.length} 
           currentPage={0} 
           onPageChange={(newPage) => {
-            // Handle page change logic here
             console.log(`Changing to page ${newPage}`);
           }} 
         />

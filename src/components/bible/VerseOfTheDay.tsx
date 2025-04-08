@@ -39,15 +39,6 @@ const VerseOfTheDay = () => {
     if (!verse) return '#';
 
     const parts = verse.reference.split(' ');
-    const bookParts = parts[0].split('.');
-    let bookName = '';
-    
-    if (bookParts.length > 1) {
-      bookName = `${bookParts[0]} ${bookParts[1]}`;
-    } else {
-      bookName = bookParts[0];
-    }
-    
     const fullBookName = BibleAPI.getBookNameFromId(verse.bookId);
     
     if (!fullBookName) return '#';

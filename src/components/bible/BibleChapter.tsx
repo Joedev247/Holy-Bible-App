@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { BibleAPI, BibleVerse } from '../../services/bibleApi';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useBibleNavigation } from '../../contexts/BibleNavigationContext';
 
 interface BibleChapterProps {
   bookId: string;
@@ -14,7 +13,12 @@ const BibleChapter = ({ bookId, chapterNumber, bookName }: BibleChapterProps) =>
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [chapterCount, setChapterCount] = useState(1);
-  const navigate = useNavigate();
+  
+  const { setSelection } = useBibleNavigation();
+  
+  useEffect(() => {
+    setSelection(bookId, chapterNumber, '1');
+  }, [bookId, chapterNumber, setSelection]);
 
   useEffect(() => {
     const fetchChapter = async () => {
@@ -22,18 +26,63 @@ const BibleChapter = ({ bookId, chapterNumber, bookName }: BibleChapterProps) =>
         setLoading(true);
         const chapterId = `${bookId}.${chapterNumber}`;
         
-        // Try to get chapter data and handle potential failures
         try {
           const chapterData = await BibleAPI.getChapter(chapterId);
           
           if (chapterData) {
             try {
               const chapterVerses = await BibleAPI.getChapterVerses(chapterId);
-              setVerses(chapterVerses || []);
+              
+              const hasValidVerses = chapterVerses && chapterVerses.length > 0 && 
+                                   chapterVerses.some(v => v && v.content);
+                                   
+              if (hasValidVerses) {
+                setVerses(chapterVerses);
+              } else {
+                console.log('No valid verses found, attempting individual verse fetch');
+                
+                const verseCount = estimateVerseCount(bookId, parseInt(chapterNumber));
+                const individualVerses = [];
+                
+                for (let i = 1; i <= verseCount; i++) {
+                  try {
+                    const verseId = `${bookId}.${chapterNumber}.${i}`;
+                    const verse = await BibleAPI.getVerse(verseId);
+                    
+                    if (verse && verse.content) {
+                      individualVerses.push(verse);
+                    }
+                  } catch (verseErr) {
+                    console.error(`Error fetching individual verse ${i}:`, verseErr);
+                  }
+                }
+                
+                if (individualVerses.length > 0) {
+                  setVerses(individualVerses);
+                } else {
+                  setError('Unable to load verse content. Please check your connection.');
+                  const placeholders = Array.from({ length: verseCount }, (_, i) => ({
+                    id: `placeholder-${i+1}`,
+                    reference: `${bookName} ${chapterNumber}:${i+1}`,
+                    content: '', 
+                    bookId: bookId,
+                    chapterId: `${bookId}.${chapterNumber}`
+                  }));
+                  setVerses(placeholders);
+                }
+              }
             } catch (verseErr) {
               console.error('Error fetching chapter verses:', verseErr);
-              setVerses([]);
               setError('Failed to load verses. Please check your connection.');
+              
+              const placeholders = Array.from({ length: 30 }, (_, i) => ({
+                id: `placeholder-${i+1}`,
+                reference: `${bookName} ${chapterNumber}:${i+1}`,
+                content: '',  
+                bookId: bookId,
+                chapterId: `${bookId}.${chapterNumber}`
+              }));
+              setVerses(placeholders);
             }
           }
         } catch (chapterErr) {
@@ -41,13 +90,14 @@ const BibleChapter = ({ bookId, chapterNumber, bookName }: BibleChapterProps) =>
           setError('Failed to load chapter. Please check your connection.');
         }
         
-        // Get chapter count with fallback
         try {
           const chapCount = await BibleAPI.getChapterCount(bookId);
           setChapterCount(chapCount || 1);
         } catch (countErr) {
           console.error('Error fetching chapter count:', countErr);
-          // Keep default chapter count (1)
+          if (bookId === 'GEN') setChapterCount(50);
+          else if (bookId === 'PSA') setChapterCount(150);
+          else setChapterCount(30);
         }
         
         setLoading(false);
@@ -59,82 +109,128 @@ const BibleChapter = ({ bookId, chapterNumber, bookName }: BibleChapterProps) =>
     };
 
     fetchChapter();
-  }, [bookId, chapterNumber]);
+  }, [bookId, chapterNumber, bookName]);
+
+  const estimateVerseCount = (bookId: string, chapter: number): number => {
+    const verseCounts: Record<string, number[]> = {
+      'GEN': [31, 25, 24, 26, 32, 22, 24, 22, 29, 32], 
+      'EXO': [22, 25, 22, 31, 23, 30, 29, 28, 35, 29], 
+      'LEV': [17, 16, 17, 35, 26, 23, 38, 36, 24, 20], 
+      'PSA': [6, 12, 8, 8, 12, 10, 17, 9, 20, 18],     
+    };
+    
+    if (verseCounts[bookId] && chapter <= verseCounts[bookId].length) {
+      return verseCounts[bookId][chapter - 1];
+    }
+    
+    if (bookId === 'PSA') return 20; 
+    if (['PRO', 'ISA', 'JER'].includes(bookId)) return 25;  
+    if (['JON', 'JUD', 'RUT'].includes(bookId)) return 15;  
+    
+    return 30; 
+  };
 
   const handleVerseClick = (verseNumber: string) => {
-    navigate(`/bible/${bookName.toLowerCase().replace(/\s+/g, '-')}/${chapterNumber}/${verseNumber}`);
+    setSelection(bookId, chapterNumber, verseNumber);
   };
 
   const navigateToChapter = (newChapter: number) => {
-    navigate(`/bible/${bookName.toLowerCase().replace(/\s+/g, '-')}/${newChapter}`);
+    setSelection(bookId, newChapter.toString(), '1');
   };
 
   if (loading) {
     return <div className="text-center py-12">Loading chapter...</div>;
   }
 
-  if (error && verses.length === 0) {
-    return <div className="text-red-600 text-center py-12">{error}</div>;
+  if (error) {
+    return <div className="text-center py-12 text-red-600">{error}</div>;
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4">
-      <h2 className="text-2xl font-serif mb-6 text-center text-[#8B0000]">
-        {bookName} {chapterNumber}
-      </h2>
-
-      {verses.length === 0 && !loading ? (
-        <div className="text-center py-4">
-          No verses available. Please check your connection and try again.
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {verses.map((verse) => (
-            <div 
-              key={verse?.id || `verse-${Math.random()}`} 
-              className="leading-relaxed cursor-pointer hover:bg-[#FFF5E6] p-2 rounded transition-colors"
-              onClick={() => handleVerseClick(verse?.reference?.split(':')[1] || '1')}
-            >
-              <span className="text-[#8B0000] font-bold mr-2">
-                {verse?.reference ? verse.reference.split(':')[1] : '?'}
-              </span>
-              <span>
-                {verse?.content ? BibleAPI.cleanVerseContent(verse.content) : 'Verse content unavailable'}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {verses.length > 0 && (
-        <div className="flex justify-between mt-8 border-t pt-4">
+    <div className="bg-white rounded-lg shadow-md">
+      <div className="bg-[#8B0000] p-4 rounded-t-lg">
+        <div className="flex flex-col sm:flex-row justify-between items-center">
           <button
             onClick={() => navigateToChapter(parseInt(chapterNumber) - 1)}
             disabled={chapterNumber === '1'}
-            className={`flex items-center ${
-              chapterNumber === '1'
-                ? 'text-gray-400 cursor-not-allowed'
-                : 'text-[#8B0000] hover:underline'
+            className={`text-white bg-transparent border border-white rounded-md px-3 py-1 text-sm w-full sm:w-auto mb-2 sm:mb-0 ${
+              chapterNumber === '1' ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white hover:bg-opacity-20'
             }`}
           >
-            <ChevronLeft className="w-5 h-5 mr-1" />
-            Previous Chapter
+            &lt; Previous Chapter
           </button>
+          
+          <div className="text-center">
+            <div className="text-sm font-normal text-white uppercase tracking-wide">
+              {bookName}
+            </div>
+            <div className="text-white text-2xl font-serif">
+              CHAPTER {chapterNumber}
+            </div>
+          </div>
           
           <button
             onClick={() => navigateToChapter(parseInt(chapterNumber) + 1)}
             disabled={parseInt(chapterNumber) >= chapterCount}
-            className={`flex items-center ${
-              parseInt(chapterNumber) >= chapterCount
-                ? 'text-gray-400 cursor-not-allowed'
-                : 'text-[#8B0000] hover:underline'
+            className={`text-white bg-transparent border border-white rounded-md px-3 py-1 text-sm w-full sm:w-auto mt-2 sm:mt-0 ${
+              parseInt(chapterNumber) >= chapterCount ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white hover:bg-opacity-20'
             }`}
           >
-            Next Chapter
-            <ChevronRight className="w-5 h-5 ml-1" />
+            Next Chapter &gt;
           </button>
         </div>
-      )}
+      </div>
+
+      <div className="p-6 bg-[#FFF9E9]">
+        <div className="space-y-0">
+          {verses.map((verse, index) => {
+            const verseNum = verse?.reference?.split(':')[1] || (index + 1).toString();
+            
+            let verseContent = "Verse content unavailable";
+            
+            if (verse && verse.content) {
+              verseContent = BibleAPI.cleanVerseContent(verse.content);
+            }
+            
+            return (
+              <div 
+                key={verse?.id || `verse-${index}`} 
+                className="flex py-2 cursor-pointer hover:bg-[#FFF5E6] rounded transition-colors"
+                onClick={() => handleVerseClick(verseNum)}
+              >
+                <span className="text-[#8B0000] font-bold mr-3 w-8 text-right flex-shrink-0">
+                  {verseNum}
+                </span>
+                <span className="flex-grow text-gray-800">
+                  {verseContent}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="p-2 bg-gray-100 rounded-b-lg flex flex-col sm:flex-row justify-between items-center">
+        <button
+          onClick={() => navigateToChapter(parseInt(chapterNumber) - 1)}
+          disabled={chapterNumber === '1'}
+          className={`text-[#8B0000] bg-transparent border border-[#8B0000] rounded-md px-3 py-1 text-sm w-full sm:w-auto mb-2 sm:mb-0 ${
+            chapterNumber === '1' ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#8B0000] hover:text-white'
+          }`}
+        >
+          &lt; Previous Chapter
+        </button>
+        
+        <button
+          onClick={() => navigateToChapter(parseInt(chapterNumber) + 1)}
+          disabled={parseInt(chapterNumber) >= chapterCount}
+          className={`text-[#8B0000] bg-transparent border border-[#8B0000] rounded-md px-3 py-1 text-sm w-full sm:w-auto ${
+            parseInt(chapterNumber) >= chapterCount ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#8B0000] hover:text-white'
+          }`}
+        >
+          Next Chapter &gt;
+        </button>
+      </div>
     </div>
   );
 };

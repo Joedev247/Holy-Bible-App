@@ -29,7 +29,6 @@ export const useVerseOfTheDay = (): UseVerseOfTheDayReturn => {
         setReference(fetchedVerse.reference || '');
         setText(BibleAPI.cleanVerseContent(fetchedVerse.content || ''));
       } else {
-        // Fallback to John 3:16 if no verse is available
         const fallbackVerse = await BibleAPI.getVerse('JHN.3.16');
         if (fallbackVerse) {
           setVerse(fallbackVerse);
@@ -47,11 +46,9 @@ export const useVerseOfTheDay = (): UseVerseOfTheDayReturn => {
     }
   };
 
-  // Fetch verse on initial load
   useEffect(() => {
     fetchVerseOfTheDay();
     
-    // Optional: Set up a timer to refresh the verse every 24 hours
     const midnight = new Date();
     midnight.setHours(24, 0, 0, 0);
     const msUntilMidnight = midnight.getTime() - new Date().getTime();

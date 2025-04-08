@@ -1,5 +1,5 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BibleNavigationProvider } from './contexts/BibleNavigationContext';
 import Layout from './components/layout/Layout';
 import Home from './pages/Home';
 import BibleReader from './pages/BibleReader';
@@ -13,23 +13,24 @@ import './index.css';
 const App = () => {
   return (
     <Router>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/bible" element={<BibleReader />} />
-          <Route path="/bible/:bookName" element={<BookView />} />
-          <Route path="/bible/:bookName/:chapterNumber" element={<ChapterView />} />
-          <Route path="/bible/:bookName/:chapterNumber/:verseNumber" element={<VerseView />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/advanced-search" element={<AdvancedSearch />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Layout>
+      <BibleNavigationProvider>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/bible" element={<BibleReader />} />
+            <Route path="/bible/:bookName" element={<BookView />} />
+            <Route path="/bible/:bookName/:chapterNumber" element={<ChapterView />} />
+            <Route path="/bible/:bookName/:chapterNumber/:verseNumber" element={<VerseView />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/advanced-search" element={<AdvancedSearch />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Layout>
+      </BibleNavigationProvider>
     </Router>
   );
 };
 
-// Simple 404 page
 const NotFound = () => {
   return (
     <div className="flex flex-col items-center justify-center py-16">

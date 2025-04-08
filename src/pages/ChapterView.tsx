@@ -22,7 +22,6 @@ const ChapterView = () => {
           return;
         }
 
-        // Convert URL-friendly book name to proper format
         const formatted = bookName
           .split('-')
           .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -30,7 +29,6 @@ const ChapterView = () => {
         
         setFormattedBookName(formatted);
 
-        // Get book ID from name
         const id = BibleAPI.getBookIdFromName(formatted);
         
         if (!id) {

@@ -1,6 +1,5 @@
 import axios from 'axios';
 
-// Your Bible API key 
 const API_KEY = '36ebed110d7d903f348a800b00415d2f';
 const API_BASE_URL = 'https://api.scripture.api.bible/v1';
 const BIBLE_VERSION = 'de4e12af7f28f599-02';
@@ -20,7 +19,6 @@ export interface BibleBook {
   chapters?: number;
 }
 
-// Bible books data
 export const BIBLE_BOOKS = {
   OLD_TESTAMENT: [
     { id: 'GEN', name: 'Genesis' },
@@ -94,23 +92,15 @@ export const BIBLE_BOOKS = {
   ]
 };
 
-// Map of known verse counts for common chapters
 export const VERSE_COUNTS: Record<string, number> = {
-  // Genesis
   'GEN.1': 31, 'GEN.2': 25, 'GEN.3': 24, 'GEN.4': 26, 'GEN.5': 32,
   'GEN.6': 22, 'GEN.7': 24, 'GEN.8': 22, 'GEN.9': 29, 'GEN.10': 32,
-  // Psalms
   'PSA.1': 6, 'PSA.23': 6, 'PSA.119': 176,
-  // John
   'JHN.1': 51, 'JHN.3': 36, 'JHN.14': 31,
-  // Matthew
   'MAT.5': 48, 'MAT.6': 34, 'MAT.7': 29,
-  // Romans
   'ROM.8': 39, 'ROM.12': 21,
-  // Add more common chapters as needed
 };
 
-// Create axios instance with proper headers
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -120,7 +110,6 @@ const apiClient = axios.create({
   }
 });
 
-// Add request interceptor to handle CORS issues
 apiClient.interceptors.request.use(config => {
   config.withCredentials = false;
   return config;
@@ -129,15 +118,12 @@ apiClient.interceptors.request.use(config => {
 export const BibleAPI = {
   apiClient,
 
-  // Get verse count for a chapter (with fallback to prevent CORS issues)
   getVerseCount: async (chapterId: string): Promise<number> => {
-    // First check our predefined verse counts
     if (VERSE_COUNTS[chapterId]) {
       return VERSE_COUNTS[chapterId];
     }
 
     try {
-      // Try to get from API if we don't have it predefined
       const response = await apiClient.get(
         `/bibles/${BIBLE_VERSION}/chapters/${chapterId}/verses`
       );
@@ -145,20 +131,16 @@ export const BibleAPI = {
     } catch (error) {
       console.error('Error fetching verse count:', error);
       
-      // If chapter doesn't exist in our predefined map and API fails,
-      // estimate based on book averages
       const bookId = chapterId.split('.')[0];
       
-      // Default verse counts by book type
-      if (bookId === 'PSA') return 20; // Psalms average
-      if (['PRO', 'ISA', 'JER'].includes(bookId)) return 25; // Longer chapters
-      if (['JON', 'JUD', '2JN', '3JN', 'PHM'].includes(bookId)) return 15; // Shorter books
+      if (bookId === 'PSA') return 20; 
+      if (['PRO', 'ISA', 'JER'].includes(bookId)) return 25; 
+      if (['JON', 'JUD', '2JN', '3JN', 'PHM'].includes(bookId)) return 15; 
       
-      return 30; // Default fallback for most books
+      return 30; 
     }
   },
 
-  // Get book information
   getBookInfo: async (bookId: string) => {
     try {
       const response = await apiClient.get(
@@ -171,7 +153,6 @@ export const BibleAPI = {
     }
   },
 
-  // Get chapter information
   getChapter: async (chapterId: string) => {
     try {
       const response = await apiClient.get(
@@ -184,7 +165,6 @@ export const BibleAPI = {
     }
   },
 
-  // Get verses for a chapter
   getChapterVerses: async (chapterId: string): Promise<BibleVerse[]> => {
     try {
       const response = await apiClient.get(
@@ -203,7 +183,6 @@ export const BibleAPI = {
     }
   },
 
-  // Get a specific verse
   getVerse: async (verseId: string): Promise<BibleVerse> => {
     try {
       const response = await apiClient.get(
@@ -223,7 +202,6 @@ export const BibleAPI = {
     }
   },
 
-  // Search the Bible
   searchBible: async (query: string): Promise<BibleVerse[]> => {
     try {
       const response = await apiClient.get(
@@ -243,7 +221,6 @@ export const BibleAPI = {
     }
   },
 
-  // Advanced search with filters
   advancedSearchBible: async (query: string, filters: { books?: string[], testament?: string }): Promise<BibleVerse[]> => {
     try {
       let params: any = { query };
@@ -280,19 +257,15 @@ export const BibleAPI = {
     }
   },
 
-  // Get verse of the day
   getVerseOfTheDay: async (): Promise<BibleVerse> => {
     try {
-      // Popular verses to choose from
       const popularVerses = [
         'JHN.3.16', 'PSA.23.1', 'ROM.8.28', 'PHP.4.13', 'JER.29.11', 
         'PRO.3.5', 'ISA.40.31', 'MAT.28.19', 'PSA.46.1', 'GAL.5.22'
       ];
       
-      // Select a random verse from the list
       const randomVerseId = popularVerses[Math.floor(Math.random() * popularVerses.length)];
       
-      // Get the verse
       const verse = await BibleAPI.getVerse(randomVerseId);
       return verse;
     } catch (error) {
@@ -301,18 +274,15 @@ export const BibleAPI = {
     }
   },
 
-  // Get chapter count for a book
   getChapterCount: async (bookId: string): Promise<number> => {
     try {
       const response = await apiClient.get(
         `/bibles/${BIBLE_VERSION}/books/${bookId}/chapters`
       );
-      // Subtract 1 to account for the "introduction" chapter that some APIs include
       return response.data.data.length - 1;
     } catch (error) {
       console.error('Error fetching chapter count:', error);
       
-      // Fallback chapter counts if API fails
       const chapterCounts: Record<string, number> = {
         'GEN': 50, 'EXO': 40, 'LEV': 27, 'NUM': 36, 'DEU': 34,
         'JOS': 24, 'JDG': 21, 'RUT': 4, '1SA': 31, '2SA': 24,
@@ -334,28 +304,25 @@ export const BibleAPI = {
     }
   },
 
-  // Helper to get book name from ID
   getBookNameFromId: (bookId: string): string | undefined => {
     const allBooks = [...BIBLE_BOOKS.OLD_TESTAMENT, ...BIBLE_BOOKS.NEW_TESTAMENT];
     const book = allBooks.find(b => b.id === bookId);
     return book?.name;
   },
 
-  // Helper to get book ID from name
   getBookIdFromName: (bookName: string): string | undefined => {
     const allBooks = [...BIBLE_BOOKS.OLD_TESTAMENT, ...BIBLE_BOOKS.NEW_TESTAMENT];
     const book = allBooks.find(b => b.name.toLowerCase() === bookName.toLowerCase());
     return book?.id;
   },
 
-// Clean verse content by removing HTML tags
 cleanVerseContent: (content: string | undefined | null): string => {
-  if (!content) return ''; // Return empty string if content is undefined or null
+  if (!content) return '';
   
   return content
-    .replace(/<\/?[^>]+(>|$)/g, '') // Remove HTML tags
-    .replace(/\s+/g, ' ')           // Normalize whitespace
-    .trim();                        // Trim leading/trailing whitespace
+    .replace(/<\/?[^>]+(>|$)/g, '') 
+    .replace(/\s+/g, ' ')          
+    .trim();                     
 }
 };
 
